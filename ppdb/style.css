@@ -1,0 +1,198 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+background:#f1f5f9;
+font-family:'Segoe UI',sans-serif;
+}
+
+header{
+background:#17398b;
+color:white;
+padding:25px;
+}
+
+.header-content{
+max-width:1200px;
+margin:auto;
+display:flex;
+align-items:center;
+gap:20px;
+}
+
+.logo{
+width:80px;
+}
+
+header h1{
+font-size:52px;
+font-weight:700;
+}
+
+header h2{
+font-size:28px;
+margin-top:5px;
+}
+
+header p{
+opacity:.9;
+}
+
+main{
+max-width:1200px;
+margin:auto;
+padding:25px;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+}
+
+.card{
+background:white;
+border-radius:24px;
+padding:25px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.card span{
+color:#64748b;
+font-size:14px;
+}
+
+.card h1{
+font-size:64px;
+margin-top:10px;
+}
+
+.icon{
+font-size:58px;
+}
+
+.total h1{color:#2563eb;}
+.laki h1{color:#16a34a;}
+.perempuan h1{color:#ec4899;}
+
+.charts{
+margin-top:25px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.box{
+background:white;
+border-radius:24px;
+padding:25px;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.box h3{
+margin-bottom:20px;
+font-size:20px;
+}
+
+#genderChart{
+max-width:320px;
+max-height:320px;
+margin:auto;
+}
+
+#jurusanCards{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.jurusan-card{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px;
+border-radius:18px;
+border:1px solid #e2e8f0;
+background:#f8fafc;
+}
+
+.jurusan-left{
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+.jurusan-icon{
+font-size:42px;
+}
+
+.jurusan-title{
+font-size:18px;
+font-weight:600;
+}
+
+.jurusan-total{
+font-size:38px;
+font-weight:bold;
+}
+
+footer{
+margin-top:30px;
+background:#172554;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+@media(max-width:768px){
+
+```
+.header-content{
+    flex-direction:column;
+    text-align:center;
+}
+
+header h1{
+    font-size:34px;
+}
+
+header h2{
+    font-size:20px;
+}
+
+.cards{
+    grid-template-columns:1fr;
+}
+
+.charts{
+    grid-template-columns:1fr;
+}
+
+.card h1{
+    font-size:48px;
+}
+
+.icon{
+    font-size:44px;
+}
+
+#genderChart{
+    max-width:240px;
+}
+
+.jurusan-title{
+    font-size:15px;
+}
+
+.jurusan-total{
+    font-size:30px;
+}
+```
+
+}

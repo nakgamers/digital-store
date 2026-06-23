@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard PPDB SMK 11 Maret Jakarta</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+
+<header>
+
+    <div class="header-content">
+
+        <img src="assets/img/logo.png" class="logo">
+
+        <div>
+
+            <h1>Dashboard PPDB</h1>
+
+            <h2>SMK 11 MARET JAKARTA</h2>
+
+            <p>Tahun Ajaran 2026 / 2027</p>
+
+        </div>
+
+    </div>
+
+</header>
+
+<main>
+
+    <div class="cards">
+
+        <div class="card total">
+
+            <div>
+                <span>Total Pendaftar</span>
+                <h1 id="total">0</h1>
+            </div>
+
+            <div class="icon">
+                🎓
+            </div>
+
+        </div>
+
+        <div class="card laki">
+
+            <div>
+                <span>Laki-Laki</span>
+                <h1 id="laki">0</h1>
+            </div>
+
+            <div class="icon">
+                👦
+            </div>
+
+        </div>
+
+        <div class="card perempuan">
+
+            <div>
+                <span>Perempuan</span>
+                <h1 id="perempuan">0</h1>
+            </div>
+
+            <div class="icon">
+                👧
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="charts">
+
+        <div class="box">
+
+            <h3>Komposisi Gender</h3>
+
+            <canvas id="genderChart"></canvas>
+
+        </div>
+
+        <div class="box">
+
+    <h3>Pendaftar per Jurusan</h3>
+
+    <div id="jurusanCards"></div>
+
+</div>
+
+    </div>
+
+</main>
+
+<footer>
+
+    <p>
+        © 2026 SMK 11 Maret Jakarta
+    </p>
+
+    <p>
+        Created by Nandz
+    </p>
+
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>
