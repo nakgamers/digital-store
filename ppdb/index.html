@@ -17,7 +17,7 @@
 
     <div class="header-content">
 
-        <img src="assets/img/logo.png" class="logo">
+        <img src="assets/img/logo.png" class="logo" alt="Logo SMK 11 Maret Jakarta">
 
         <div>
 
@@ -44,8 +44,8 @@
                 <h1 id="total">0</h1>
             </div>
 
-            <div class="icon">
-                🎓
+            <div class="icon" aria-hidden="true">
+                &#127891;
             </div>
 
         </div>
@@ -57,8 +57,8 @@
                 <h1 id="laki">0</h1>
             </div>
 
-            <div class="icon">
-                👦
+            <div class="icon" aria-hidden="true">
+                &#128102;
             </div>
 
         </div>
@@ -70,8 +70,8 @@
                 <h1 id="perempuan">0</h1>
             </div>
 
-            <div class="icon">
-                👧
+            <div class="icon" aria-hidden="true">
+                &#128103;
             </div>
 
         </div>
@@ -90,20 +90,50 @@
 
         <div class="box">
 
-    <h3>Pendaftar per Jurusan</h3>
+            <h3>Pendaftar per Jurusan</h3>
 
-    <div id="jurusanCards"></div>
+            <div id="jurusanCards"></div>
 
-</div>
+        </div>
 
     </div>
 
 </main>
 
+<section class="floating-formulir" id="formulirKeluarWidget">
+
+    <div class="formulir-panel" id="formulirKeluarPanel" hidden>
+
+        <div class="formulir-panel-header">
+
+            <div>
+                <span>Formulir Keluar</span>
+                <strong id="formulirKeluarTotal">0</strong>
+            </div>
+
+            <button type="button" id="formulirKeluarClose" aria-label="Tutup formulir keluar">
+                &times;
+            </button>
+
+        </div>
+
+        <p id="formulirKeluarStatus">
+            Mengambil data...
+        </p>
+
+    </div>
+
+    <button type="button" class="formulir-toggle" id="formulirKeluarToggle" aria-label="Buka formulir keluar" aria-expanded="false">
+        <span aria-hidden="true">&#128196;</span>
+        <strong id="formulirKeluarBadge">0</strong>
+    </button>
+
+</section>
+
 <footer>
 
     <p>
-        © 2026 SMK 11 Maret Jakarta
+        &copy; 2026 SMK 11 Maret Jakarta
     </p>
 
     <p>
