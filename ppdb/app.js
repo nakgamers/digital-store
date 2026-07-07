@@ -2,9 +2,20 @@ const API_URL =
 "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSlbb9ZWSjGSEGUdZ0tqKlLGkiHWsKocc85XM8oqndnYClCaeH2DNMCFfi3KB3picbb8sCHbdC6-y7R9cUCNxPs9QGweI1vYO7Qxd4KtLYWxWIAep2XdL24KMKaHCz9dX8DzOQrbOCxowboFxGOVxRzqU04hBmu6TprZkYjndwaVq0Cox5rfy2SOeGBiVqN8_LfYAMA9SS4KIlKNU76n2O5vEKHNkuIOLv5ySg18o7lauxhK82JequdxC4Be_VKPEbYrgZeKdhaKrgaUZnjUfXmE9q31A&lib=MzawmfAFAGJ-OAYbEYXyUKL6E_lHEQFLY";
 
 const FORMULIR_KELUAR_URL =
-"https://docs.google.com/spreadsheets/d/1-2J2cSSsk3Z4kcO3Bi8jCNTJ_fKeVFV9gJOfs6ZJTjM/gviz/tq?tqx=out:json&gid=1871636261";
+"https://docs.google.com/spreadsheets/d/1-2J2cSSsk3Z4kcO3Bi8jCNTJ_fKeVFV9gJOfs6ZJTjM/gviz/tq?gid=1871636261";
+
+const FORMULIR_KELUAR_CALLBACK = "handleFormulirKeluarResponse";
 
 let genderChart = null;
+
+// Konfigurasi kuota per jurusan
+// Target: 4 kelas per jurusan (2 pagi + 2 siang), 36 siswa per kelas
+const KUOTA_PER_KELAS = 36;
+const KELAS_PAGI = 2;
+const KELAS_SIANG = 2;
+const KUOTA_PAGI = KUOTA_PER_KELAS * KELAS_PAGI;   // 72
+const KUOTA_SIANG = KUOTA_PER_KELAS * KELAS_SIANG; // 72
+const KUOTA_TOTAL = KUOTA_PAGI + KUOTA_SIANG;      // 144
 
 function getJurusanMeta(nama) {
 
@@ -39,7 +50,24 @@ function getJurusanMeta(nama) {
 
 }
 
-function renderJurusanCard(container, nama, total) {
+function normalizeShift(value) {
+
+    const normalized =
+        String(value ?? "").trim().toLowerCase();
+
+    if (normalized.includes("pagi")) {
+        return "pagi";
+    }
+
+    if (normalized.includes("siang")) {
+        return "siang";
+    }
+
+    return null;
+
+}
+
+function renderJurusanCard(container, nama, stats) {
 
     const meta =
         getJurusanMeta(nama);
@@ -47,6 +75,9 @@ function renderJurusanCard(container, nama, total) {
     const card =
         document.createElement("div");
     card.className = "jurusan-card";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("aria-label", `Lihat detail kuota jurusan ${nama}`);
 
     const left =
         document.createElement("div");
@@ -66,32 +97,175 @@ function renderJurusanCard(container, nama, total) {
     title.className = "jurusan-title";
     title.textContent = nama;
 
+    const kuotaHint =
+        document.createElement("div");
+    kuotaHint.className = "jurusan-kuota-hint";
+    kuotaHint.textContent = `Kuota ${stats.total}/${KUOTA_TOTAL}`;
+
     const totalElement =
         document.createElement("div");
     totalElement.className = "jurusan-total";
     totalElement.style.color = meta.color;
-    totalElement.textContent = total;
+    totalElement.textContent = stats.total;
 
     textWrapper.appendChild(title);
+    textWrapper.appendChild(kuotaHint);
     left.appendChild(icon);
     left.appendChild(textWrapper);
 
     card.appendChild(left);
     card.appendChild(totalElement);
 
+    const openDetail = () => openJurusanModal(nama, stats, meta);
+
+    card.addEventListener("click", openDetail);
+
+    card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openDetail();
+        }
+    });
+
     container.appendChild(card);
 
 }
 
-function parseGoogleSheetResponse(text) {
+function buildKuotaRow(label, jumlah, kuota) {
 
-    const jsonText =
-        text.trim()
-            .replace(/^\/\*O_o\*\/\s*/, "")
-            .replace(/^google\.visualization\.Query\.setResponse\(/, "")
-            .replace(/\);$/, "");
+    const sisa =
+        kuota - jumlah;
 
-    return JSON.parse(jsonText);
+    const row =
+        document.createElement("div");
+    row.className = "kuota-row";
+
+    const rowHead =
+        document.createElement("div");
+    rowHead.className = "kuota-row-head";
+
+    const rowLabel =
+        document.createElement("span");
+    rowLabel.className = "kuota-row-label";
+    rowLabel.textContent = label;
+
+    const rowNumbers =
+        document.createElement("span");
+    rowNumbers.className = "kuota-row-numbers";
+    rowNumbers.textContent = `${jumlah} / ${kuota}`;
+
+    rowHead.appendChild(rowLabel);
+    rowHead.appendChild(rowNumbers);
+
+    const progressTrack =
+        document.createElement("div");
+    progressTrack.className = "kuota-progress-track";
+
+    const progressFill =
+        document.createElement("div");
+    progressFill.className = "kuota-progress-fill";
+
+    const percentage =
+        kuota > 0 ? Math.min(100, Math.max(0, (jumlah / kuota) * 100)) : 0;
+
+    progressFill.style.width = `${percentage}%`;
+
+    if (jumlah > kuota) {
+        progressFill.classList.add("kuota-progress-over");
+    }
+
+    progressTrack.appendChild(progressFill);
+
+    const sisaLabel =
+        document.createElement("div");
+    sisaLabel.className = "kuota-sisa";
+
+    if (sisa > 0) {
+        sisaLabel.textContent = `Sisa kuota: ${sisa}`;
+    } else if (sisa === 0) {
+        sisaLabel.textContent = "Kuota penuh";
+        sisaLabel.classList.add("kuota-sisa-penuh");
+    } else {
+        sisaLabel.textContent = `Melebihi kuota: ${Math.abs(sisa)}`;
+        sisaLabel.classList.add("kuota-sisa-lebih");
+    }
+
+    row.appendChild(rowHead);
+    row.appendChild(progressTrack);
+    row.appendChild(sisaLabel);
+
+    return row;
+
+}
+
+function openJurusanModal(nama, stats, meta) {
+
+    const modal =
+        document.getElementById("jurusanModal");
+    const modalIcon =
+        document.getElementById("jurusanModalIcon");
+    const modalTitle =
+        document.getElementById("jurusanModalTitle");
+    const modalBody =
+        document.getElementById("jurusanModalBody");
+
+    modalIcon.textContent = meta.icon;
+    modalIcon.style.color = meta.color;
+    modalTitle.textContent = nama;
+
+    modalBody.innerHTML = "";
+
+    modalBody.appendChild(
+        buildKuotaRow("Total Keseluruhan", stats.total, KUOTA_TOTAL)
+    );
+    modalBody.appendChild(
+        buildKuotaRow("Kelas Pagi", stats.pagi, KUOTA_PAGI)
+    );
+    modalBody.appendChild(
+        buildKuotaRow("Kelas Siang", stats.siang, KUOTA_SIANG)
+    );
+
+    if (stats.tanpaShift > 0) {
+        const note =
+            document.createElement("div");
+        note.className = "kuota-note";
+        note.textContent =
+            `${stats.tanpaShift} pendaftar belum memiliki data Shift (pagi/siang).`;
+        modalBody.appendChild(note);
+    }
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+
+}
+
+function closeJurusanModal() {
+
+    const modal =
+        document.getElementById("jurusanModal");
+
+    modal.hidden = true;
+    document.body.classList.remove("modal-open");
+
+}
+
+function setupJurusanModal() {
+
+    const modal =
+        document.getElementById("jurusanModal");
+    const overlay =
+        document.getElementById("jurusanModalOverlay");
+    const closeButton =
+        document.getElementById("jurusanModalClose");
+
+    closeButton.addEventListener("click", closeJurusanModal);
+    overlay.addEventListener("click", closeJurusanModal);
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) {
+            closeJurusanModal();
+        }
+    });
 
 }
 
@@ -142,7 +316,7 @@ function extractFormulirKeluarTotal(data) {
 
 }
 
-async function loadFormulirKeluar() {
+function handleFormulirKeluarResponse(response) {
 
     const totalElement =
         document.getElementById("formulirKeluarTotal");
@@ -153,24 +327,12 @@ async function loadFormulirKeluar() {
 
     try {
 
-        const response =
-            await fetch(FORMULIR_KELUAR_URL);
-
-        if (!response.ok) {
+        if (!response || response.status === "error") {
             throw new Error("Gagal mengambil data formulir keluar");
         }
 
-        const text =
-            await response.text();
-
-        const data =
-            text.trim().startsWith("google.visualization")
-                || text.trim().startsWith("/*O_o*/")
-                ? parseGoogleSheetResponse(text)
-                : JSON.parse(text);
-
         const total =
-            extractFormulirKeluarTotal(data);
+            extractFormulirKeluarTotal(response);
 
         if (total === null) {
             throw new Error("Format data formulir keluar tidak valid");
@@ -193,6 +355,34 @@ async function loadFormulirKeluar() {
         console.error(error);
 
     }
+
+}
+
+function loadFormulirKeluar() {
+
+    const statusElement =
+        document.getElementById("formulirKeluarStatus");
+
+    const existingScript =
+        document.getElementById("formulirKeluarScript");
+
+    if (existingScript) {
+        existingScript.remove();
+    }
+
+    const script =
+        document.createElement("script");
+
+    script.id = "formulirKeluarScript";
+    script.src =
+        `${FORMULIR_KELUAR_URL}&tqx=out:json;responseHandler:${FORMULIR_KELUAR_CALLBACK}`;
+
+    script.onerror = () => {
+        statusElement.innerText =
+            "Data formulir keluar belum bisa dimuat";
+    };
+
+    document.body.appendChild(script);
 
 }
 
@@ -262,8 +452,27 @@ async function loadDashboard() {
             const jur =
                 String(item["Jurusan"] || "Lainnya").trim() || "Lainnya";
 
-            jurusan[jur] =
-                (jurusan[jur] || 0) + 1;
+            if (!jurusan[jur]) {
+                jurusan[jur] = {
+                    total: 0,
+                    pagi: 0,
+                    siang: 0,
+                    tanpaShift: 0
+                };
+            }
+
+            jurusan[jur].total++;
+
+            const shift =
+                normalizeShift(item["Shift"]);
+
+            if (shift === "pagi") {
+                jurusan[jur].pagi++;
+            } else if (shift === "siang") {
+                jurusan[jur].siang++;
+            } else {
+                jurusan[jur].tanpaShift++;
+            }
 
         });
 
@@ -317,13 +526,13 @@ async function loadDashboard() {
         jurusanCards.innerHTML = "";
 
         Object.entries(jurusan)
-            .filter(([, totalJurusan]) => totalJurusan > 0)
-            .sort((a, b) => b[1] - a[1])
-            .forEach(([nama, totalJurusan]) => {
+            .filter(([, stats]) => stats.total > 0)
+            .sort((a, b) => b[1].total - a[1].total)
+            .forEach(([nama, stats]) => {
                 renderJurusanCard(
                     jurusanCards,
                     nama,
-                    totalJurusan
+                    stats
                 );
             });
 
@@ -337,6 +546,7 @@ async function loadDashboard() {
 
 loadDashboard();
 setupFormulirKeluarWidget();
+setupJurusanModal();
 loadFormulirKeluar();
 
 setInterval(loadDashboard,30000);
